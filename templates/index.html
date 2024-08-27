@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Search</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="mt-5">YouTube Search</h1>
+      <form action="{{ url_for('search') }}" method="post">
+        <div class="form-group">
+          <label for="query">Search Query</label>
+          <input
+            type="text"
+            class="form-control"
+            id="query"
+            name="query"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="sort_by">Sort By</label>
+          <select class="form-control" id="sort_by" name="sort_by">
+            <option value="relevance">Relevance</option>
+            <option value="viewCount">View Count</option>
+            <option value="rating">Rating</option>
+            <option value="date">Date</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="max_results">Max Results</label>
+          <input
+            type="number"
+            class="form-control"
+            id="max_results"
+            name="max_results"
+            min="1"
+            max="50"
+            value="10"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+  </body>
+</html>
