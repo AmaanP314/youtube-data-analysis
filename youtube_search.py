@@ -14,7 +14,7 @@ matplotlib.use('Agg')
 
 warnings.filterwarnings("ignore", module="matplotlib")
 sns.set()
-api_key = os.setenv('YOUTUBE_API_KEY')
+api_key = os.getenv('YOUTUBE_API_KEY')
 
 youtube = build('youtube', 'v3', developerKey = api_key)
 
