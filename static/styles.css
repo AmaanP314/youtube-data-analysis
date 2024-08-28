@@ -2,17 +2,18 @@ body {
   font-family: "Arial", sans-serif;
   background-color: #f8f9fa;
   color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
   margin: 0;
+  display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
 .container {
   margin-top: 20px;
-  width: 80%;
-  max-width: 1200px;
+  width: 95%;
+  max-width: 2500px;
   background-color: #ffffff;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -21,63 +22,49 @@ body {
 h1,
 h2,
 h3 {
-  color: #007bff;
+  color: red;
   font-weight: bold;
   text-align: center;
+  margin-top: 0px;
 }
 
-.form-group label {
-  font-weight: bold;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.table-container {
-  width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-color: #ffffff;
-  margin-bottom: 40px;
-}
-
-.table {
-  border: 1px solid #dee2e6;
-  width: 100%;
-}
-
-.table th,
-.table td {
-  vertical-align: middle;
-  text-align: center;
-}
-
-.table thead th {
-  background-color: #e9ecef;
-  font-weight: bold;
-}
-
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(0, 0, 0, 0.05);
+.table-responsive {
+  margin-top: 20px;
+  margin-bottom: 0px;
 }
 
 img {
   max-width: 100%;
   height: auto;
-  margin-top: 10px;
   border: 1px solid #ddd;
   padding: 5px;
   background-color: #fff;
+  margin: 10px 0;
 }
 
-.alert {
-  text-align: center;
-}
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  h3 {
+    font-size: 1rem;
+  }
+  p {
+    font-size: 0.6rem;
+  }
 
-.visualizations {
-  margin-top: 40px;
-  text-align: center;
+  .container {
+    width: 100%;
+    padding: 10px;
+  }
+
+  th,
+  td {
+    font-size: 0.8rem;
+    padding: 8px;
+    text-align: center;
+  }
 }

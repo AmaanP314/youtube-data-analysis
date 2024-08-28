@@ -15,46 +15,44 @@
   </head>
   <body>
     <div class="container">
-      <h1 class="mt-5">Search Results for "{{ query }}"</h1>
+      <h1 class="mt-5 text-center">Search Results for "{{ query }}"</h1>
       {% if error %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% else %} {{ table | safe }}
-      <h2 class="mt-5">Visualizations</h2>
-      <div class="mt-3">
+      {% else %}
+      <div class="table-responsive">{{ table | safe }}</div>
+
+      <h2 class="mt-5 text-center">Visualizations</h2>
+      <div class="mt-3 text-center">
         <h3>Total Views and Likes</h3>
         <img
           src="data:image/png;base64,{{ total_plot }}"
           alt="Total Views and Likes"
         />
       </div>
-      <div class="mt-3">
-        <h3>Views and Likes(%)</h3>
+      <div class="mt-3 text-center">
+        <h3>Views and Likes (%)</h3>
         <img
           src="data:image/png;base64,{{ percent_plot }}"
           alt="Views and Likes Percentage"
         />
       </div>
-      <div class="mt-3">
-        <h3>Engagement Rate:</h3>
+      <div class="mt-3 text-center">
+        <h3>Engagement Rate</h3>
         <p>
-          The engagement rate is a metric that measures the level of interaction
-          that viewers have with a video. It takes into account various forms of
-          engagement, such as likes, dislikes, comments, shares, and the overall
-          watch time
+          The engagement rate measures the level of interaction viewers have
+          with a video. It includes likes, dislikes, comments, shares, and watch
+          time.
         </p>
         <img
           src="data:image/png;base64,{{ engagement_rate_plot }}"
           alt="Engagement Rate"
         />
       </div>
-      <div class="mt-3">
+      <div class="mt-3 text-center">
         <h3>Composite Score</h3>
         <p>
-          The Composite Score is a combined metric that aggregates multiple
-          performance indicators into a single, comprehensive score. This score
-          aims to provide a more holistic evaluation of a video's success or
-          quality, considering various aspects of viewer engagement and
-          interaction.
+          The Composite Score aggregates multiple performance indicators into a
+          single score to evaluate video success or quality.
         </p>
         <img
           src="data:image/png;base64,{{ composite_score_plot }}"

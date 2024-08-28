@@ -10,10 +10,11 @@ import io
 import os
 import base64
 import re
-matplotlib.use('Agg')
 
+matplotlib.use('Agg')
 warnings.filterwarnings("ignore", module="matplotlib")
 sns.set()
+
 api_key = os.getenv('YOUTUBE_API_KEY')
 
 youtube = build('youtube', 'v3', developerKey = api_key)
@@ -88,7 +89,16 @@ def get_data(search, sort_by='relevance', max_results=5):
     return videos_data
 
 def viz_combined(df, plot_type='total'):
-    fig, ax = plt.subplots(figsize=(12, 8))
+    if len(df) <= 20:
+        fig, ax = plt.subplots(figsize=(12, 8))
+        bottom_margin = 0.25 + 0.07 * (len(df) // 5)
+    elif len(df) <= 40:
+        fig, ax = plt.subplots(figsize=(14, 10))
+        bottom_margin = 0.15 + 0.05 * (len(df) // 5)
+    else:
+        fig, ax = plt.subplots(figsize=(18, 14))
+        bottom_margin = 0.1 + 0.05 * (len(df) // 5)
+        
     colors = ['#03045e','#023e8a','#0077b6','#0096c7','#00b4d8','#48cae4','#90e0ef','#ade8f4']
     sns.set_style('white')
 
@@ -148,8 +158,9 @@ def viz_combined(df, plot_type='total'):
         ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2%}'))
 
     plt.rcParams['font.family'] = 'DejaVu Sans'
+    if len(df) > 40:
+        plt.tight_layout()
 
-    bottom_margin = 0.25 + 0.07 * (len(df) // 5)  
     fig.subplots_adjust(bottom=bottom_margin)
     
     for text in legend.get_texts():
