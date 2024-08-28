@@ -20,6 +20,10 @@ def results():
     sort_by = request.args.get('sort_by')
     max_results = int(request.args.get('max_results'))
     data = search_youtube(query, sort_by=sort_by, max_results=max_results)
+    
+    if data == "quota_exceeded":
+        return render_template('results.html', query=query, error="Today's Quota Exceeded🥲, Come back tomorrow!")
+    
     if data is None:
         return render_template('results.html', query=query, error="No data found.")
     

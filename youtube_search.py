@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 import isodate
 import matplotlib
 import pandas as pd
@@ -75,17 +76,36 @@ def get_video_details(video_id):
     
 def get_data(search, sort_by='relevance', max_results=5):
     videos_data = []
-    req = youtube.search().list(q=search,
-                                part='snippet',
-                                type='video',
-                                order=sort_by,
-                                maxResults=max_results)
-    response = req.execute()
-    for item in response['items']:
-        video_id = item['id']['videoId']
-        video_data = get_video_details(video_id)
-        if video_data is not None:
-            videos_data.append(video_data)
+    
+    try:
+        req = youtube.search().list(
+            q=search,
+            part='snippet',
+            type='video',
+            order=sort_by,
+            maxResults=max_results
+        )
+        response = req.execute()
+        
+        for item in response['items']:
+            video_id = item['id']['videoId']
+            video_data = get_video_details(video_id)
+            if video_data is not None:
+                videos_data.append(video_data)
+    
+    except HttpError as e:
+        error_code = e.resp.status
+        if error_code == 403:
+            # print("YouTube API quota has been exceeded.")
+            return "quota_exceeded"
+        else:
+            # print(f"An HTTP error occurred: {e}")
+            return None
+    
+    except Exception as e:
+        # print(f"An error occurred: {e}")
+        return None
+    
     return videos_data
 
 def viz_combined(df, plot_type='total'):
@@ -94,7 +114,7 @@ def viz_combined(df, plot_type='total'):
         bottom_margin = 0.25 + 0.07 * (len(df) // 5)
     elif len(df) <= 40:
         fig, ax = plt.subplots(figsize=(14, 10))
-        bottom_margin = 0.15 + 0.05 * (len(df) // 5)
+        bottom_margin = 0.17 + 0.05 * (len(df) // 5)
     else:
         fig, ax = plt.subplots(figsize=(18, 14))
         bottom_margin = 0.1 + 0.05 * (len(df) // 5)
@@ -171,6 +191,10 @@ def viz_combined(df, plot_type='total'):
 
 def search_youtube(search_query, sort_by='relevance', max_results=10):
     videos_data = get_data(search_query, sort_by, max_results)
+    
+    if videos_data == "quota_exceeded":
+        return "quota_exceeded"
+    
     if not videos_data:
         return None
 
