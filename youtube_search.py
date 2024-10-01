@@ -1,5 +1,6 @@
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from transformers import pipeline
 import isodate
 import matplotlib
 import pandas as pd
@@ -15,10 +16,13 @@ import re
 matplotlib.use('Agg')
 warnings.filterwarnings("ignore", module="matplotlib")
 sns.set()
-
-api_key = os.getenv('YOUTUBE_API_KEY')
+api_key = 'AIzaSyDtqLe7rRVVuYq3HsjbLOov-3mf_ZI2Mlg'
+# api_key = os.getenv('YOUTUBE_API_KEY')
 
 youtube = build('youtube', 'v3', developerKey = api_key)
+
+sentiment_model = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
+label_map = {"LABEL_0": "Negative", "LABEL_1": "Neutral", "LABEL_2": "Positive"}
 
 def get_video_details(video_id):
     try:
@@ -73,10 +77,38 @@ def get_video_details(video_id):
     except Exception as e:
         print(f"An error occurred while fetching video details: {e}")
         return None
+
+def get_comments(video_id, order='relevance', maxResults=10):
+    positive, neutral, negative = (0,0,0)
+    comment_req = youtube.commentThreads().list(
+        part='snippet',
+        videoId=video_id,
+        textFormat='plainText',
+        order=order,
+        maxResults=maxResults
+    )
+    comments_response = comment_req.execute()
+
+    for comment_item in comments_response['items']:
+        try:
+            comment = comment_item['snippet']['topLevelComment']['snippet']['textDisplay']
+            result = sentiment_model(comment)
+            sentiment = label_map[result[0]['label']]
+            if sentiment == 'Positive':
+                positive += 1
+            elif sentiment == 'Negative':
+                negative += 1
+            else:
+                neutral += 1
+            # print(f"\t Comment: {comment}\nSentiment: {sentiment} (Confidence Score: {result[0]['score']:.4f})\n")
+        except Exception as e:
+            # print(f"Error processing comment: {e}")
+            pass
+    return {'Positive': positive, 'Negative': negative, 'Neutral': neutral}
     
 def get_data(search, sort_by='relevance', max_results=5):
     videos_data = []
-    
+    comments_data = []
     try:
         req = youtube.search().list(
             q=search,
@@ -91,7 +123,9 @@ def get_data(search, sort_by='relevance', max_results=5):
             video_id = item['id']['videoId']
             video_data = get_video_details(video_id)
             if video_data is not None:
+                comment_data = get_comments(video_id, maxResults=10)
                 videos_data.append(video_data)
+                comments_data.append(comment_data)
     
     except HttpError as e:
         error_code = e.resp.status
@@ -106,7 +140,7 @@ def get_data(search, sort_by='relevance', max_results=5):
         # print(f"An error occurred: {e}")
         return None
     
-    return videos_data
+    return videos_data, comments_data
 
 def viz_combined(df, plot_type='total'):
     if len(df) <= 20:
@@ -189,8 +223,16 @@ def viz_combined(df, plot_type='total'):
 
     plt.show()
 
+def sentiment_viz(df):
+    ax = df.plot(kind='bar', stacked=True, figsize=(12, 6), color=['#28a745', '#dc3545', '#bfbfbf'])
+    plt.title('Sentiment Analysis for Multiple Videos')
+    plt.xlabel('Video Index')
+    plt.ylabel('Number of Comments')
+    plt.xticks(ticks=range(len(df)), labels=[i + 1 for i in range(len(df))], rotation=0)
+    plt.legend(['Positive', 'Negative', 'Neutral'])
+
 def search_youtube(search_query, sort_by='relevance', max_results=10):
-    videos_data = get_data(search_query, sort_by, max_results)
+    videos_data, comments_data = get_data(search_query, sort_by, max_results)
     
     if videos_data == "quota_exceeded":
         return "quota_exceeded"
@@ -199,17 +241,21 @@ def search_youtube(search_query, sort_by='relevance', max_results=10):
         return None
 
     df = pd.DataFrame(videos_data)
+    df_com = pd.DataFrame(comments_data)
     try:
         df['upload_date'] = pd.to_datetime(df['upload_date'].str.split('T').str[0])
         df['likes(%)'] = (df['likes'] / df['views']) * 100
         df = df[['title', 'channel_name', 'subscribers', 'views', 'likes', 'likes(%)', 'duration_minutes', 'upload_date', 'comments', 'video_link']]
         
         total_plot = plot_to_base64(viz_combined, df, plot_type='total')
-        percent_plot = plot_to_base64(viz_combined, df, plot_type='percent')
         engagement_rate_plot = plot_to_base64(viz_combined, df, plot_type='engagement_rate')
         composite_score_plot = plot_to_base64(viz_combined, df, plot_type='composite_score')
-        
-        return df, total_plot, percent_plot, engagement_rate_plot, composite_score_plot
+        comment_plot = plot_to_base64(sentiment_viz, df_com, plot_type=None)
+
+        df['title'] = df.apply(lambda row: f'<a href="{row["video_link"]}" target="_blank">{row["title"]}</a>', axis=1)
+        df = df.drop(columns=['video_link'])
+
+        return df, total_plot, comment_plot, engagement_rate_plot, composite_score_plot
     except KeyError as e:
         print(f"Missing expected data in the DataFrame: {e}")
         return None
@@ -219,7 +265,10 @@ def search_youtube(search_query, sort_by='relevance', max_results=10):
 
 def plot_to_base64(plot_func, df, plot_type):
     img = io.BytesIO()
-    plot_func(df, plot_type=plot_type)
+    if plot_type is not None:
+        plot_func(df, plot_type=plot_type)
+    else:
+        plot_func(df)
     plt.savefig(img, format='png')
     plt.close()
     img.seek(0)

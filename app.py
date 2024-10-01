@@ -27,10 +27,10 @@ def results():
     if data is None:
         return render_template('results.html', query=query, error="No data found.")
     
-    df, total_plot, percent_plot, engagement_rate_plot, composite_score_plot = data
+    df, total_plot, comment_plot, engagement_rate_plot, composite_score_plot = data
     df.index = df.index + 1
     df_html = df.to_html(classes='table table-striped', index=True, escape=False)
-    return render_template('results.html', query=query, table=df_html, total_plot=total_plot, percent_plot=percent_plot, engagement_rate_plot=engagement_rate_plot, composite_score_plot=composite_score_plot)
+    return render_template('results.html', query=query, table=df_html, total_plot=total_plot, comment_plot=comment_plot, engagement_rate_plot=engagement_rate_plot, composite_score_plot=composite_score_plot)
 
 if __name__ == '__main__':
     app.run(debug=True)
