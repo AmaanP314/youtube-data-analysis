@@ -1,6 +1,7 @@
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from transformers import pipeline
+from transformers import TFRobertaForSequenceClassification, RobertaTokenizer
+import tensorflow as tf
 import isodate
 import matplotlib
 import pandas as pd
@@ -16,13 +17,24 @@ import re
 matplotlib.use('Agg')
 warnings.filterwarnings("ignore", module="matplotlib")
 sns.set()
-api_key = 'AIzaSyDtqLe7rRVVuYq3HsjbLOov-3mf_ZI2Mlg'
-# api_key = os.getenv('YOUTUBE_API_KEY')
+
+api_key = os.getenv('YOUTUBE_API_KEY')
 
 youtube = build('youtube', 'v3', developerKey = api_key)
 
-sentiment_model = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
-label_map = {"LABEL_0": "Negative", "LABEL_1": "Neutral", "LABEL_2": "Positive"}
+model_name = "AmaanP314/youtube-comment-sentiment"
+model = TFRobertaForSequenceClassification.from_pretrained(model_name)
+tokenizer = RobertaTokenizer.from_pretrained(model_name)
+
+label_map = {0: "Negative", 1: "Neutral", 2: "Positive"}
+
+def sentiment_analysis(text):
+    inputs = tokenizer(text, return_tensors="tf", padding=True, truncation=True, max_length=512)
+    outputs = model(inputs)
+    logits = outputs.logits
+    predicted_class = tf.argmax(logits, axis=1).numpy()[0]
+    return label_map[predicted_class]
+
 
 def get_video_details(video_id):
     try:
@@ -92,8 +104,7 @@ def get_comments(video_id, order='relevance', maxResults=10):
     for comment_item in comments_response['items']:
         try:
             comment = comment_item['snippet']['topLevelComment']['snippet']['textDisplay']
-            result = sentiment_model(comment)
-            sentiment = label_map[result[0]['label']]
+            sentiment = sentiment_analysis(comment)
             if sentiment == 'Positive':
                 positive += 1
             elif sentiment == 'Negative':
